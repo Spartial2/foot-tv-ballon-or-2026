@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FOOT TV - Ballon d'Or 2026</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#07101f;color:white;font-family:Arial,sans-serif}
+.tv{width:100%;max-width:1080px;margin:auto;min-height:100vh;background:linear-gradient(140deg,#07101f,#1b3052 55%,#080e1b)}
+header{display:flex;justify-content:space-between;align-items:center;padding:25px 6%;border-bottom:5px solid #f01843}
+.brand{font-size:clamp(22px,5vw,48px);font-weight:900;letter-spacing:3px}
+.brand span{color:#ffcb54}
+.live{background:#bb1034;padding:15px;border-radius:8px;font-weight:900;letter-spacing:2px}
+.hero{padding:35px 6% 20px}
+.kicker{color:#70caff;letter-spacing:5px;font-weight:bold}
+h1{font-size:clamp(42px,10vw,95px);line-height:1;margin:22px 0}
+h1 span{color:#ffca55}
+.sub{font-size:clamp(16px,3vw,30px);color:#d8e7ff}
+.flash{display:flex;background:#ed153d;font-weight:900;font-size:clamp(13px,3vw,26px);margin-top:15px}
+.flash b{background:white;color:#b70028;padding:18px}
+.flash span{padding:18px}
+.board{margin:28px 5%;border:2px solid #42648c;border-radius:15px;overflow:hidden}
+.board-title{display:flex;justify-content:space-between;gap:12px;align-items:center;background:#193452;padding:20px;font-size:clamp(16px,3vw,30px);font-weight:bold}
+#status{font-size:13px;color:#9bdcff}
+.window{height:560px;overflow:hidden;position:relative}
+#ranking{animation:scroll 100s linear infinite}
+.entry{display:flex;align-items:center;gap:18px;padding:12px 20px;border-bottom:1px solid #35516f;min-height:65px}
+.rank{background:#f6c453;color:#07101f;font-size:28px;font-weight:900;padding:8px;min-width:65px;text-align:center}
+.name{flex:1;font-size:20px;font-weight:bold}
+.pending{color:#aab8cc;font-style:italic;font-weight:normal}
+@keyframes scroll{0%,5%{transform:translateY(0)}90%,100%{transform:translateY(-50%)}}
+footer{background:#b9092f;padding:20px;font-weight:bold;text-align:center}
+.note{font-size:12px;text-align:center;color:#aebbd0;padding:15px}
+</style>
+</head>
+<body>
+<div class="tv">
+<header><div class="brand">FOOT<span>•</span>TV</div><div class="live">● DIRECT</div></header>
+<section class="hero"><div class="kicker">LA SOIRÉE DES TROPHÉES</div><h1>BALLON <span>D'OR</span><br>2026</h1><div class="sub">Classement masculin • De la 30e à la 1re place</div></section>
+<div class="flash"><b>FLASH</b><span id="flash">CLASSEMENT EN ATTENTE DES ANNONCES OFFICIELLES</span></div>
+<div class="board"><div class="board-title"><span>🏆 LE CLASSEMENT</span><span id="status">SOURCE NON CONFIGURÉE</span></div><div class="window"><div id="ranking"></div></div></div>
+<footer id="latest">DERNIÈRE ANNONCE : EN ATTENTE</footer>
+<div class="note">Les résultats sont affichés uniquement après vérification.</div>
+</div>
+<script>
+const endpoint=new URLSearchParams(location.search).get("feed");
+let entries={};
+function render(){
+ const rows=[];
+ for(let i=30;i>=1;i--){
+ const name=entries[i]||"Non annoncé";
+ rows.push('<div class="entry"><span class="rank">'+i+'</span><span class="name '+(!entries[i]?'pending':'')+'">'+escapeHtml(name)+'</span></div>');
+ }
+ const list=rows.join("");
+ document.getElementById("ranking").innerHTML=list+list;
+}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+async function refresh(){
+ if(!endpoint)return;
+ try{
+ const r=await fetch(endpoint,{cache:"no-store"});
+ if(!r.ok)throw Error("Flux indisponible");
+ const data=await r.json();
+ if(!Array.isArray(data.ranking))throw Error("Format invalide");
+ const next={};
+ for(const item of data.ranking){
+ const rank=Number(item.rank);
+ if(Number.isInteger(rank)&&rank>=1&&rank<=30&&typeof item.name==="string")next[rank]=item.name;
+ }
+ entries=next;render();
+ document.getElementById("status").textContent="RÉSULTATS SYNCHRONISÉS";
+ document.getElementById("flash").textContent=data.headline||"SUIVI DES RÉSULTATS OFFICIELS";
+ document.getElementById("latest").textContent="DERNIÈRE ANNONCE : "+(data.latest||"EN ATTENTE");
+ }catch(e){document.getElementById("status").textContent="CONNEXION INDISPONIBLE";}
+}
+render();refresh();setInterval(refresh,30000);
+</script>
+</body>
+</html>
