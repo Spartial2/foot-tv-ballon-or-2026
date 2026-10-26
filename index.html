@@ -44,7 +44,7 @@ footer{background:#b9092f;padding:20px;font-weight:bold;text-align:center}
 <div class="note">Les résultats sont affichés uniquement après vérification.</div>
 </div>
 <script>
-const endpoint=new URLSearchParams(location.search).get("feed");
+const feed = "/.netlify/functions/results";
 let entries={};
 function render(){
  const rows=[];
